@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - F:\EL\dalza-automations\static:/app/static
+      - ./main.py:/app/main.py
+      - ./nationality_map.json:/app/nationality_map.json
+      - ./utils.py:/app/utils.py
+    environment:
+      - PORT=5000
+      - LOGIN_USERNAME=prajwal.galliexpress@gmail.com
+      - LOGIN_PASSWORD=prajwal123
+      - SUBMIT_FORM=False
+
+    restart: unless-stopped
