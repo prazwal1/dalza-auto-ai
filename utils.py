@@ -56,7 +56,7 @@ def process_passport_mrz(image_path):
         "given_name": mrz_data.get('names', '').replace('<', ' ').strip(),
         "sex": mrz_data.get('sex', ''),
         "dob": format_date(mrz_data.get('date_of_birth', '')),
-        "passport_no": mrz_data.get('number', ''),
+        "passport_no": clean_passport_number(mrz_data.get('number', ''))
     }
    
     # Remove empty values
@@ -74,3 +74,46 @@ def get_nationality(code):
     with open("nationality_map.json", "r") as f:
         nationality_map = json.load(f)
     return nationality_map.get(code, code)
+
+
+def clean_passport_number(raw_number: str) -> str:
+    """
+    Cleans and corrects common OCR errors in passport numbers.
+    Assumes passport numbers start with 2 letters followed by digits.
+    """
+    if not raw_number:
+        return ""
+
+    # Replace MRZ filler character with space, then strip
+    number = raw_number.replace('<', ' ').strip().upper()
+
+    # Take first two characters as letters, correct only if obviously misread
+    corrected_prefix = number[:2]
+    # prefix_corrections = {
+    #     '0': 'O',
+    #     '1': 'I',
+    #     '5': 'S',
+    #     '8': 'B',
+    #     '2': 'Z',
+    # }
+    # corrected_prefix = ''.join(prefix_corrections.get(c, c) for c in prefix)
+
+    # Apply stricter correction to remaining characters, assumed to be digits
+    suffix = number[2:]
+    digit_corrections = {
+        'O': '0',
+        'Q': '0',
+        'D': '0',
+        'I': '1',
+        'L': '1',
+        'Z': '2',
+        'S': '5',
+        'B': '8',
+        'G': '6'
+    }
+    corrected_suffix = ''.join(digit_corrections.get(c, c) for c in suffix)
+
+    # Combine and remove any non-alphanumeric characters (if needed)
+    cleaned = ''.join(filter(str.isalnum, corrected_prefix + corrected_suffix))
+
+    return cleaned
