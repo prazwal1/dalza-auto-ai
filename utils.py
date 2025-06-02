@@ -2,6 +2,7 @@
 from passporteye import read_mrz
 import pytesseract
 import json
+import re
 
 def process_passport_mrz(image_path):
     """
@@ -53,7 +54,7 @@ def process_passport_mrz(image_path):
     formatted_data = {
         "nationality": get_nationality(mrz_data.get('nationality', '')),
         "surname": mrz_data.get('surname', '').replace('<', ' ').strip(),
-        "given_name": mrz_data.get('names', '').replace('<', ' ').strip(),
+        "given_name": re.sub(r'\s*K+$', '', mrz_data.get('names', '').replace('<', ' ').strip()),
         "sex": mrz_data.get('sex', ''),
         "dob": format_date(mrz_data.get('date_of_birth', '')),
         "passport_no": clean_passport_number(mrz_data.get('number', ''))
